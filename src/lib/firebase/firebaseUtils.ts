@@ -1,18 +1,27 @@
 import { auth, db, storage } from "./firebase";
 import {
   signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
+  User,
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
 import {
   collection,
   addDoc,
-  getDocs,
-  doc,
   updateDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
   deleteDoc,
+  serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 // Auth functions
 export const logoutUser = () => signOut(auth);
@@ -29,8 +38,18 @@ export const signInWithGoogle = async () => {
 };
 
 // Firestore functions
-export const addDocument = (collectionName: string, data: any) =>
-  addDoc(collection(db, collectionName), data);
+export const addDocument = async (collectionName: string, data: any) => {
+  try {
+    const docRef = await addDoc(collection(db, collectionName), {
+      ...data,
+      createdAt: serverTimestamp(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    throw error;
+  }
+};
 
 export const getDocuments = async (collectionName: string) => {
   const querySnapshot = await getDocs(collection(db, collectionName));
